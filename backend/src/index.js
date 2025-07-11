@@ -10,7 +10,7 @@ const submitRouter = require("./routes/submit")
 const aiRouter = require("./routes/aiChatting")
 const videoRouter = require("./routes/videoCreator");
 const cors = require('cors')
-
+const port = process.env.PORT || 3000;
 
 app.use(cors({
     origin: 'http://localhost:5173',
@@ -33,8 +33,8 @@ const InitalizeConnection = async ()=>{
         await Promise.all([main(),redisClient.connect()]);
         console.log("DB Connected");
         
-        app.listen(process.env.PORT, ()=>{
-            console.log("Server listening at port number: "+ process.env.PORT);
+        app.listen(port, '0.0.0.0', ()=>{
+            console.log("Server listening at port number: "+ port);
         })
 
     }
