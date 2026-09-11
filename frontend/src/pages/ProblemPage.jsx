@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import Editor from '@monaco-editor/react';
-import { useParams } from 'react-router';
+import { NavLink, useParams } from 'react-router';
 import axiosClient from "../utils/axiosClient"
 import SubmissionHistory from "../components/SubmissionHistory"
 import ChatAi from '../components/ChatAi';
 import Editorial from '../components/Editorial';
 import { motion } from 'framer-motion';
+import { ArrowLeft, Braces } from 'lucide-react';
 
 const langMap = {
         cpp: 'C++',
@@ -37,9 +38,9 @@ const ProblemPage = () => {
       try {
         
         const response = await axiosClient.get(`/problem/problemById/${problemId}`);
-       
-        
-        const initialCode = response.data.startCode.find(sc => sc.language === langMap[selectedLanguage]).initialCode;
+
+
+        const initialCode = response.data.startCode.find(sc => sc.language === langMap[selectedLanguage])?.initialCode || '';
 
         setProblem(response.data);
         
@@ -58,7 +59,7 @@ const ProblemPage = () => {
   // Update code when language changes
   useEffect(() => {
     if (problem) {
-      const initialCode = problem.startCode.find(sc => sc.language === langMap[selectedLanguage]).initialCode;
+      const initialCode = problem.startCode.find(sc => sc.language === langMap[selectedLanguage])?.initialCode || '';
       setCode(initialCode);
     }
   }, [selectedLanguage, problem]);
@@ -93,7 +94,9 @@ const ProblemPage = () => {
       console.error('Error running code:', error);
       setRunResult({
         success: false,
-        error: 'Internal server error'
+        testCases: [],
+        errorMessage:
+          error.response?.data || 'Internal server error. Please try again.'
       });
       setLoading(false);
       setActiveRightTab('testcase');
@@ -116,7 +119,11 @@ const ProblemPage = () => {
       
     } catch (error) {
       console.error('Error submitting code:', error);
-      setSubmitResult(null);
+      setSubmitResult({
+        accepted: false,
+        error:
+          error.response?.data || 'Internal server error. Please try again.'
+      });
       setLoading(false);
       setActiveRightTab('result');
     }
@@ -142,25 +149,31 @@ const ProblemPage = () => {
 
   if (loading && !problem) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900">
+      <div className="cc-loading-screen">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <span className="loading loading-spinner loading-lg text-purple-400"></span>
+          <span className="loading loading-spinner loading-lg text-warning"></span>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col lg:flex-row bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
+    <div className="cc-workspace h-screen flex flex-col text-white">
+      <header className="cc-workspace-topbar">
+        <NavLink to="/" aria-label="Back to problems"><ArrowLeft size={17} /></NavLink>
+        <span className="cc-workspace-logo"><Braces size={16} /></span>
+        <strong>{problem?.title || 'Problem'}</strong>
+        {problem?.difficulty && <span className={`cc-difficulty cc-difficulty-${problem.difficulty.toLowerCase()}`}>{problem.difficulty}</span>}
+      </header>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex w-full flex-col lg:flex-row"
+        className="cc-workspace-body flex min-h-0 flex-1 w-full flex-col lg:flex-row"
       >
         {/* Left Panel */}
         <div className="w-full lg:w-1/2 flex flex-col border-r border-purple-500/30">
@@ -409,9 +422,9 @@ const ProblemPage = () => {
                           <h4 className="font-bold">✅ All test cases passed!</h4>
                           <p className="text-sm mt-2">Runtime: {runResult.runtime+" sec"}</p>
                           <p className="text-sm">Memory: {runResult.memory+" KB"}</p>
-                          
+
                           <div className="mt-4 space-y-2">
-                            {runResult.testCases.map((tc, i) => (
+                            {(runResult.testCases || []).map((tc, i) => (
                               <div key={i} className="bg-base-100 p-3 rounded text-xs">
                                 <div className="font-mono">
                                   <div><strong>Input:</strong> {tc.stdin}</div>
@@ -428,8 +441,13 @@ const ProblemPage = () => {
                       ) : (
                         <div>
                           <h4 className="font-bold">❌ Error</h4>
+                          {(!runResult.testCases || runResult.testCases.length === 0) && (
+                            <p className="text-sm mt-2 whitespace-pre-wrap">
+                              {runResult.errorMessage || 'Something went wrong while running your code.'}
+                            </p>
+                          )}
                           <div className="mt-4 space-y-2">
-                            {runResult.testCases.map((tc, i) => (
+                            {(runResult.testCases || []).map((tc, i) => (
                               <div key={i} className="bg-base-100 p-3 rounded text-xs">
                                 <div className="font-mono">
                                   <div><strong>Input:</strong> {tc.stdin}</div>
@@ -471,10 +489,12 @@ const ProblemPage = () => {
                         </div>
                       ) : (
                         <div>
-                          <h4 className="font-bold text-lg">❌ {submitResult.error}</h4>
-                          <div className="mt-4 space-y-2">
-                            <p>Test Cases Passed: {submitResult.passedTestCases}/{submitResult.totalTestCases}</p>
-                          </div>
+                          <h4 className="font-bold text-lg">❌ {submitResult.error || 'Wrong Answer'}</h4>
+                          {submitResult.totalTestCases !== undefined && (
+                            <div className="mt-4 space-y-2">
+                              <p>Test Cases Passed: {submitResult.passedTestCases}/{submitResult.totalTestCases}</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

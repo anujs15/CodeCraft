@@ -33,7 +33,7 @@ const AdminVideo = () => {
       await axiosClient.delete(`/video/delete/${id}`);
       setProblems(problems.filter(problem => problem._id !== id));
     } catch (err) {
-      setError(err);
+      setError(err.response?.data?.error || err.response?.data || 'Failed to delete video');
       console.log(err);
     }
   };
@@ -54,7 +54,7 @@ const AdminVideo = () => {
           <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>{error.response.data.error}</span>
+          <span>{typeof error === 'string' ? error : 'Something went wrong'}</span>
         </div>
       </div>
     );
@@ -106,11 +106,11 @@ const AdminVideo = () => {
                     <th>{index + 1}</th>
                     <td className="text-xs sm:text-sm">{problem.title}</td>
                     <td>
-                      <span className={`badge badge-xs sm:badge-sm ${
-                        problem.difficulty === 'Easy' 
-                          ? 'badge-success' 
-                          : problem.difficulty === 'Medium' 
-                            ? 'badge-warning' 
+                      <span className={`badge badge-xs sm:badge-sm capitalize ${
+                        problem.difficulty?.toLowerCase() === 'easy'
+                          ? 'badge-success'
+                          : problem.difficulty?.toLowerCase() === 'medium'
+                            ? 'badge-warning'
                             : 'badge-error'
                       }`}>
                         {problem.difficulty}
@@ -122,20 +122,16 @@ const AdminVideo = () => {
                       </span>
                     </td>
                     <td>
-                      <div className="flex space-x-1">
-                         <NavLink 
+                      <div className="flex space-x-2">
+                         <NavLink
                             to={`/admin/upload/${problem._id}`}
                             className="btn btn-xs sm:btn-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 hover:scale-105 transition-transform"
                             >
                             Upload
                         </NavLink>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex space-x-2">
-                        <motion.button 
+                        <motion.button
                           onClick={() => handleDelete(problem._id)}
-                          className="btn btn-sm bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 hover:scale-105 transition-transform"
+                          className="btn btn-xs sm:btn-sm bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 hover:scale-105 transition-transform"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >

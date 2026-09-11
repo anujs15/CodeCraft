@@ -44,6 +44,15 @@ const Editorial = ({ secureUrl, thumbnailUrl, duration }) => {
     }
   }, []);
 
+  // No video uploaded for this problem yet — avoid rendering an empty player.
+  if (!secureUrl) {
+    return (
+      <div className="w-full max-w-2xl mx-auto rounded-xl border border-dashed border-gray-700 p-8 text-center text-gray-400">
+        No video editorial is available for this problem yet.
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

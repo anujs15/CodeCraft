@@ -75,7 +75,10 @@ function AdminUpdateProblem() {
     const fetchProblemData = async () => {
       try {
         setIsLoading(true);
-        const { data } = await axiosClient.get(`/problem/problemById/${problemId}`);
+        // Use the admin-only endpoint so hiddenTestCases are included. The public
+        // problemById endpoint hides them, which left this form unable to satisfy
+        // the "at least one hidden test case" rule and blocked every update.
+        const { data } = await axiosClient.get(`/problem/problemForUpdate/${problemId}`);
         
         // Transform data to match form structure
         reset({

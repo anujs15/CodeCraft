@@ -1,144 +1,90 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Video, ArrowLeft } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink } from 'react-router';
 import { motion } from 'framer-motion';
+import { ArrowRight, BookOpen, Edit3, Plus, ShieldCheck, Trash2, Video, Wrench } from 'lucide-react';
+import axiosClient from '../utils/axiosClient';
+import Navbar from '../components/ui/Navbar';
+
+const managementActions = [
+  { title: 'Create a problem', description: 'Add the statement, test cases, starter code, and reference solutions.', icon: Plus, route: '/admin/create', tone: 'green' },
+  { title: 'Edit problem library', description: 'Review and update existing challenge content and test coverage.', icon: Edit3, route: '/admin/update', tone: 'blue' },
+  { title: 'Manage video editorials', description: 'Upload or remove the walkthrough attached to each problem.', icon: Video, route: '/admin/video', tone: 'amber' },
+];
 
 function Admin() {
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [problems, setProblems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  const adminOptions = [
-    {
-      id: 'create',
-      title: 'Create Problem',
-      description: 'Add a new coding problem',
-      icon: Plus,
-      color: 'from-green-400 to-emerald-600',
-      route: '/admin/create'
-    },
-    {
-      id: 'update',
-      title: 'Update Problem',
-      description: 'Edit existing problems and their details',
-      icon: Edit,
-      color: 'from-blue-400 to-indigo-600',
-      route: '/admin/update'
-    },
-    {
-      id: 'delete',
-      title: 'Delete Problem',
-      description: 'Remove problems from the platform',
-      icon: Trash2,
-      color: 'from-red-400 to-rose-600',
-      route: '/admin/delete'
-    },
-    {
-      id: 'video',
-      title: 'Manage Videos',
-      description: 'Upload and delete video solutions',
-      icon: Video,
-      color: 'from-purple-400 to-violet-600',
-      route: '/admin/video'
-    }
+  useEffect(() => {
+    let active = true;
+    const loadProblems = async () => {
+      try {
+        const { data } = await axiosClient.get('/problem/getAllProblem');
+        if (active) setProblems(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Unable to load admin overview:', error);
+        if (active) setLoadError(true);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadProblems();
+    return () => { active = false; };
+  }, []);
+
+  const counts = useMemo(() => ({
+    total: problems.length,
+    easy: problems.filter((problem) => problem.difficulty?.toLowerCase() === 'easy').length,
+    medium: problems.filter((problem) => problem.difficulty?.toLowerCase() === 'medium').length,
+    hard: problems.filter((problem) => problem.difficulty?.toLowerCase() === 'hard').length,
+  }), [problems]);
+
+  const stats = [
+    { label: 'Total problems', value: counts.total, className: 'total' },
+    { label: 'Easy', value: counts.easy, className: 'easy' },
+    { label: 'Medium', value: counts.medium, className: 'medium' },
+    { label: 'Hard', value: counts.hard, className: 'hard' },
   ];
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-  
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 text-white relative">
-      {/* Background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-purple-600/20 blur-3xl rounded-full"></div>
-        <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-blue-600/20 blur-3xl rounded-full"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyMjIiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djZoNnYtNmgtNnptNiAwaDZ2LTZoLTZ2NnptLTYtNnY2aDZ2LTZoLTZ6Ii8+PC9nPjwvZz48L3N2Zz4=')] bg-center opacity-30"></div>
-      </div>
+    <div className="cc-app-shell">
+      <Navbar />
+      <main className="cc-page cc-admin-page">
+        <motion.header initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="cc-admin-heading">
+          <div><p className="cc-eyebrow">Administration</p><h1>Workspace overview</h1><p>Manage the problem library, editorials, and platform access.</p></div>
+          <NavLink to="/" className="cc-button cc-button-secondary"><BookOpen size={16} /> View problem set</NavLink>
+        </motion.header>
 
-      {/* Back to Home Link */}
-      <div className="container mx-auto pt-6 px-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <NavLink to="/" className="flex items-center text-purple-400 hover:text-purple-300 transition-colors mb-6 group">
-            <ArrowLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform duration-200" /> 
-            Back to Home
-          </NavLink>
-        </motion.div>
-      </div>
+        <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .04 }} className="cc-admin-stats" aria-label="Problem statistics">
+          {stats.map((stat) => <div className={`cc-admin-stat cc-admin-stat-${stat.className}`} key={stat.label}><span>{stat.label}</span>{loading ? <i className="cc-admin-stat-loading" /> : <strong>{loadError ? '—' : stat.value}</strong>}</div>)}
+        </motion.section>
 
-      <div className="container mx-auto px-6 pb-16">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-4xl sm:text-5xl font-extrabold mb-4">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500">Admin Dashboard</span>
-          </h1>
-          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-            Manage your coding platform with powerful tools and full control
-          </p>
-        </motion.div>
+        <section className="cc-admin-layout">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .08 }} className="cc-panel cc-admin-management">
+            <div className="cc-admin-section-heading"><div className="cc-admin-section-icon"><Wrench size={18} /></div><div><h2>Content management</h2><p>Create and maintain the learning experience.</p></div></div>
+            <div className="cc-admin-action-list">
+              {managementActions.map((action) => {
+                const Icon = action.icon;
+                return <NavLink to={action.route} className="cc-admin-action" key={action.title}><span className={`cc-admin-action-icon cc-admin-action-${action.tone}`}><Icon size={19} /></span><span><strong>{action.title}</strong><small>{action.description}</small></span><ArrowRight size={17} /></NavLink>;
+              })}
+            </div>
+          </motion.div>
 
-        {/* Admin Options Grid */}
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto"
-        >
-          {adminOptions.map((option, index) => {
-            const IconComponent = option.icon;
-            return (
-              <motion.div
-                key={option.id}
-                variants={item}
-                whileHover={{ 
-                  scale: 1.03,
-                  boxShadow: "0 10px 25px -5px rgba(120, 80, 220, 0.3)",
-                  transition: { duration: 0.2 }
-                }}
-                whileTap={{ scale: 0.97 }}
-                className="h-full"
-              >
-                <NavLink to={option.route} className="block h-full">
-                  <div className="h-full rounded-2xl backdrop-blur-sm bg-gray-900/80 border border-gray-700 hover:border-purple-500/50 transition-all duration-300 p-6 relative overflow-hidden group">
-                    {/* Background gradient */}
-                    <div className={`absolute -right-24 -bottom-24 w-48 h-48 rounded-full bg-gradient-to-br ${option.color} opacity-10 group-hover:opacity-20 blur-xl transition-opacity duration-300`}></div>
-                    
-                    <div className="flex flex-col items-center text-center h-full relative z-10">
-                      <div className={`p-4 rounded-xl bg-gradient-to-br ${option.color} shadow-lg mb-5 group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
-                        <IconComponent size={24} className="text-white" />
-                      </div>
-                      <h2 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-blue-400 transition-all duration-300">
-                        {option.title}
-                      </h2>
-                      <p className="text-gray-400 group-hover:text-gray-300 transition-colors duration-300 mt-2">
-                        {option.description}
-                      </p>
-                    </div>
-                  </div>
-                </NavLink>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </div>
+          <div className="cc-admin-side">
+            <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .11 }} className="cc-panel cc-admin-side-card">
+              <span className="cc-admin-side-icon"><ShieldCheck size={20} /></span>
+              <div><p className="cc-eyebrow">Access control</p><h2>Add an administrator</h2><p>Create a separate admin account without changing your current session.</p></div>
+              <NavLink to="/admin/register" className="cc-button cc-button-secondary">Manage access <ArrowRight size={15} /></NavLink>
+            </motion.section>
+
+            <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .14 }} className="cc-panel cc-admin-danger">
+              <div><Trash2 size={18} /><span><strong>Delete problems</strong><small>Permanently remove a challenge from the library.</small></span></div>
+              <NavLink to="/admin/delete">Open delete tools <ArrowRight size={14} /></NavLink>
+            </motion.section>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

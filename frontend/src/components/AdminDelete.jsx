@@ -104,10 +104,10 @@ const AdminDelete = () => {
                     <th>{index + 1}</th>
                     <td className="text-xs sm:text-sm font-medium text-purple-100">{problem.title}</td>
                     <td>
-                      <span className={`px-2 py-1 rounded text-xs font-semibold text-black ${
-                        problem.difficulty === 'Easy'
+                      <span className={`px-2 py-1 rounded text-xs font-semibold text-black capitalize ${
+                        problem.difficulty?.toLowerCase() === 'easy'
                           ? 'bg-green-400'
-                          : problem.difficulty === 'Medium'
+                          : problem.difficulty?.toLowerCase() === 'medium'
                           ? 'bg-yellow-400'
                           : 'bg-red-500'
                       }`}>

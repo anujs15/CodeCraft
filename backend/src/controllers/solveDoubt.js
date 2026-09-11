@@ -83,16 +83,17 @@ You are an expert Data Structures and Algorithms (DSA) tutor specializing in hel
 Remember: Your goal is to help users learn and understand DSA concepts through the lens of the current problem, not just to provide quick answers.
 `},
     });
-     
+
     res.status(201).json({
         message:response.text
     });
     }
 
-    main();
-      
+    await main();
+
     }
     catch(err){
+        console.error("AI doubt-solver error:", err);
         res.status(500).json({
             message: "Internal server error"
         });

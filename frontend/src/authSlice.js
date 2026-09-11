@@ -8,7 +8,14 @@ export const registerUser = createAsyncThunk(
     const response =  await axiosClient.post('/user/register', userData);
         return response.data.user;
     } catch (error) {
-      return rejectWithValue(error);
+      // Backend sends plain-text errors like "Error: Week Password" on 400.
+      // Extract a serializable message so Redux state stays clean and the UI
+      // can show something useful (passing the raw axios error is non-serializable).
+      const message =
+        (typeof error.response?.data === 'string' && error.response.data) ||
+        error.response?.data?.message ||
+        'Registration failed. Please try again.';
+      return rejectWithValue({ message });
     }
   }
 );
@@ -40,9 +47,9 @@ export const checkAuth = createAsyncThunk(
       return data.user;
     } catch (error) {
       if (error.response?.status === 401) {
-        return rejectWithValue(null); 
+        return rejectWithValue(null);
       }
-      return rejectWithValue(error);
+      return rejectWithValue({ message: 'Unable to verify session' });
     }
   }
 );
@@ -54,7 +61,10 @@ export const logoutUser = createAsyncThunk(
       await axiosClient.post('/user/logout');
       return null;
     } catch (error) {
-      return rejectWithValue(error);
+      const message =
+        (typeof error.response?.data === 'string' && error.response.data) ||
+        'Logout failed';
+      return rejectWithValue({ message });
     }
   }
 );

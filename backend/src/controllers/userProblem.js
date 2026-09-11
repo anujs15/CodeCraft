@@ -162,12 +162,12 @@ const getProblemById = async(req,res)=>{
 
   const {id} = req.params;
   try{
-     
+
     if(!id)
       return res.status(400).send("ID is Missing");
 
     const getProblem = await Problem.findById(id).select('_id title description difficulty tags visibleTestCases startCode referenceSolution ');
-   
+
     // video ka jo bhi url wagera le aao
 
    if(!getProblem)
@@ -175,20 +175,40 @@ const getProblemById = async(req,res)=>{
 
    const videos = await SolutionVideo.findOne({problemId:id});
 
-   if(videos){   
-    
+   if(videos){
+
    const responseData = {
     ...getProblem.toObject(),
     secureUrl:videos.secureUrl,
     thumbnailUrl : videos.thumbnailUrl,
     duration : videos.duration,
-   } 
-  
+   }
+
    return res.status(200).send(responseData);
    }
-    
+
    res.status(200).send(getProblem);
 
+  }
+  catch(err){
+    res.status(500).send("Error: "+err);
+  }
+}
+
+const getProblemForAdmin = async(req,res)=>{
+
+  const {id} = req.params;
+  try{
+
+    if(!id)
+      return res.status(400).send("ID is Missing");
+
+    const problem = await Problem.findById(id);
+
+    if(!problem)
+      return res.status(404).send("Problem is Missing");
+
+    res.status(200).send(problem);
   }
   catch(err){
     res.status(500).send("Error: "+err);
@@ -235,14 +255,11 @@ const solvedAllProblembyUser =  async(req,res)=>{
 const submittedProblem = async(req,res)=>{
 
   try{
-     
+
     const userId = req.result._id;
     const problemId = req.params.pid;
 
    const ans = await Submission.find({userId,problemId});
-  
-  if(ans.length==0)
-    res.status(200).send("No Submission is persent");
 
   res.status(200).send(ans);
 
@@ -254,7 +271,7 @@ const submittedProblem = async(req,res)=>{
 
 
 
-module.exports = {createProblem,updateProblem,deleteProblem,getProblemById,getAllProblem,solvedAllProblembyUser,submittedProblem};
+module.exports = {createProblem,updateProblem,deleteProblem,getProblemById,getProblemForAdmin,getAllProblem,solvedAllProblembyUser,submittedProblem};
 
 
 

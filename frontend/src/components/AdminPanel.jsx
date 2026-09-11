@@ -86,7 +86,10 @@ function AdminPanel() {
       alert('Problem created successfully!');
       navigate('/');
     } catch (error) {
-      alert(`Error: ${error.response?.data?.message || error.message}`);
+      // Backend sends plain-text errors like "Error: ...", so read data first.
+      const message =
+        error.response?.data?.message || error.response?.data || error.message;
+      alert(`Error: ${message}`);
     }
   };
 
@@ -178,7 +181,17 @@ function AdminPanel() {
                   <h3 className="font-semibold text-blue-300 text-lg">
                     {index === 0 ? 'C++' : index === 1 ? 'Java' : 'JavaScript'}
                   </h3>
+                  <input
+                    type="hidden"
+                    {...register(`startCode.${index}.language`)}
+                    value={index === 0 ? 'C++' : index === 1 ? 'Java' : 'JavaScript'}
+                  />
                   <textarea {...register(`startCode.${index}.initialCode`)} className="textarea w-full bg-gray-800 text-white font-mono" rows={5} placeholder="Starter Code..." />
+                  <input
+                    type="hidden"
+                    {...register(`referenceSolution.${index}.language`)}
+                    value={index === 0 ? 'C++' : index === 1 ? 'Java' : 'JavaScript'}
+                  />
                   <textarea {...register(`referenceSolution.${index}.completeCode`)} className="textarea w-full bg-gray-800 text-white font-mono" rows={5} placeholder="Reference Solution..." />
                 </div>
               ))}
